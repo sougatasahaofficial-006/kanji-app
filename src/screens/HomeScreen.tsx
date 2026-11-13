@@ -1,32 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { List, Settings } from 'lucide-react';
 import type { JLPTLevelId, JLPTLevelInfo } from '../types/kanji';
 import { JLPT_LEVELS } from '../types/kanji';
-import { KanjiGridOverlay, type LevelLessonsGroup } from '../components/KanjiGridOverlay';
 
 interface HomeScreenProps {
-  allLevelGroups: LevelLessonsGroup[];
   onSelectLevel: (level: JLPTLevelId) => void;
+  onOpenAllKanji: () => void;
   onOpenSettings: () => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
-  allLevelGroups,
   onSelectLevel,
+  onOpenAllKanji,
   onOpenSettings,
 }) => {
-  const [showAllKanjiGrid, setShowAllKanjiGrid] = useState(false);
-
-  if (showAllKanjiGrid) {
-    return (
-      <KanjiGridOverlay
-        groups={allLevelGroups}
-        onClose={() => setShowAllKanjiGrid(false)}
-        onOpenSettings={onOpenSettings}
-      />
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#242933] text-white flex flex-col select-none">
       {/* Top Bar with Three-Line List Icon & Settings Gear */}
@@ -34,8 +21,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={() => setShowAllKanjiGrid(true)}
-            title="View all Kanji (N5 - N2)"
+            onClick={onOpenAllKanji}
+            title="View all Kanji (N5 - N1)"
             aria-label="View all Kanji"
             className="text-slate-200 hover:text-white p-1"
           >

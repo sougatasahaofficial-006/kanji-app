@@ -1,4 +1,9 @@
-import type { JLPTLevelId, KanjiLesson, KanjiLessonItem } from './types/kanji';
+import type {
+  JLPTLevelId,
+  JLPTSubsectionInfo,
+  KanjiLesson,
+  KanjiLessonItem,
+} from './types/kanji';
 import { N5_LESSONS } from './data/n5';
 import { N4_LESSONS } from './data/n4';
 import { N3_LESSONS } from './data/n3';
@@ -10,6 +15,10 @@ import { LevelScreen } from './screens/LevelScreen';
 import { CustomReviewScreen } from './screens/CustomReviewScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { SessionRunner } from './components/SessionRunner';
+import {
+  KanjiGridOverlay,
+  type CoreKanjiEntry,
+} from './components/KanjiGridOverlay';
 import { useState, useMemo, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -40,40 +49,58 @@ export function App() {
   } = useAppStore();
 
   const [view, setView] = useState<ActiveView>({ name: 'home' });
+  const [selectedSubsection, setSelectedSubsection] =
+    useState<JLPTSubsectionInfo | null>(null);
+  const [allKanjiOpen, setAllKanjiOpen] = useState(false);
+  const [inspectedKanji, setInspectedKanji] =
+    useState<CoreKanjiEntry | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
   useEffect(() => {
-  if (!Capacitor.isNativePlatform()) return;
+    if (!Capacitor.isNativePlatform()) return;
 
-  let listenerHandle: { remove: () => Promise<void> } | null = null;
+    let listenerHandle: { remove: () => Promise<void> } | null = null;
 
-  CapacitorApp.addListener('backButton', () => {
-    if (settingsOpen) {
-      setSettingsOpen(false);
-      return;
-    }
-    if (
-      view.name === 'lesson-session' ||
-      view.name === 'review-session' ||
-      view.name === 'custom-review'
-    ) {
-      setView({ name: 'level', level: view.level });
-      return;
-    }
-    if (view.name === 'level') {
-      setView({ name: 'home' });
-      return;
-    }
-    CapacitorApp.exitApp();
-  }).then((handle) => {
-    listenerHandle = handle;
-  });
+    CapacitorApp.addListener('backButton', () => {
+      if (settingsOpen) {
+        setSettingsOpen(false);
+        return;
+      }
+      if (allKanjiOpen) {
+        if (inspectedKanji) {
+          setInspectedKanji(null);
+        } else {
+          setAllKanjiOpen(false);
+        }
+        return;
+      }
+      if (
+        view.name === 'lesson-session' ||
+        view.name === 'review-session' ||
+        view.name === 'custom-review'
+      ) {
+        setView({ name: 'level', level: view.level });
+        return;
+      }
+      if (view.name === 'level') {
+        if (selectedSubsection) {
+          setSelectedSubsection(null);
+        } else {
+          setView({ name: 'home' });
+        }
+        return;
+      }
+      CapacitorApp.exitApp();
+    }).then((handle) => {
+      listenerHandle = handle;
+    });
 
-  return () => {
-    if (listenerHandle) {
-      listenerHandle.remove();
-    }
-  };
-}, [settingsOpen, view]);
+    return () => {
+      if (listenerHandle) {
+        listenerHandle.remove();
+      }
+    };
+  }, [settingsOpen, allKanjiOpen, inspectedKanji, view, selectedSubsection]);
 
   function getLessonsForLevel(level: JLPTLevelId): KanjiLesson[] {
     switch (level) {
@@ -131,6 +158,7 @@ export function App() {
     });
     return due.length > 0 ? due : learnedItemsForLevel;
   }, [learnedItemsForLevel, srsProgress]);
+
   useEffect(() => {
     if (settings.dailyStudyReminders) {
       ensureNotificationServiceWorker();
@@ -179,11 +207,34 @@ export function App() {
     );
   }
 
+  if (allKanjiOpen) {
+    return (
+      <KanjiGridOverlay
+        groups={allLevelGroups}
+        allGroups={allLevelGroups}
+        voice={settings.voice}
+        inspectedKanji={inspectedKanji}
+        onInspectKanji={setInspectedKanji}
+        onClose={() => {
+          setInspectedKanji(null);
+          setAllKanjiOpen(false);
+        }}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
+    );
+  }
+
   if (view.name === 'home') {
     return (
       <HomeScreen
-        allLevelGroups={allLevelGroups}
-        onSelectLevel={(level) => setView({ name: 'level', level })}
+        onSelectLevel={(level) => {
+          setSelectedSubsection(null);
+          setView({ name: 'level', level });
+        }}
+        onOpenAllKanji={() => {
+          setInspectedKanji(null);
+          setAllKanjiOpen(true);
+        }}
         onOpenSettings={() => setSettingsOpen(true)}
       />
     );
@@ -200,7 +251,12 @@ export function App() {
         level={view.level}
         lessons={levelLessons}
         learnedLessonIds={learnedLessons[view.level] || []}
-        allLevelGroups={allLevelGroups}
+        selectedSubsection={selectedSubsection}
+        onSelectSubsection={setSelectedSubsection}
+        onOpenAllKanji={() => {
+          setInspectedKanji(null);
+          setAllKanjiOpen(true);
+        }}
         dueCount={dueCount}
         dailyReviewsCompleted={dailyReviewsCompleted}
         dailyLessonGoal={settings.dailyLessonGoal ?? 2}
@@ -208,7 +264,10 @@ export function App() {
         goalCompletedDates={goalCompletedDates}
         showDailyGoals={settings.showDailyGoals}
         onEnsureDailyTargets={ensureDailyTargetLessons}
-        onBack={() => setView({ name: 'home' })}
+        onBack={() => {
+          setSelectedSubsection(null);
+          setView({ name: 'home' });
+        }}
         onOpenSettings={() => setSettingsOpen(true)}
         onStartLesson={(lesson) =>
           setView({ name: 'lesson-session', level: view.level, lesson })

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { X, List, Settings } from 'lucide-react';
 import {
   JLPT_LEVELS,
@@ -7,13 +7,14 @@ import {
   type JLPTSubsectionInfo,
   type KanjiLesson,
 } from '../types/kanji';
-import { KanjiGridOverlay, type LevelLessonsGroup } from '../components/KanjiGridOverlay';
 
 interface LevelScreenProps {
   level: JLPTLevelId;
   lessons: KanjiLesson[];
   learnedLessonIds: string[];
-  allLevelGroups: LevelLessonsGroup[];
+  selectedSubsection: JLPTSubsectionInfo | null;
+  onSelectSubsection: (sub: JLPTSubsectionInfo | null) => void;
+  onOpenAllKanji: () => void;
   dueCount: number;
   dailyReviewsCompleted: number;
   dailyLessonGoal: number;
@@ -32,7 +33,9 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
   level,
   lessons,
   learnedLessonIds,
-  allLevelGroups,
+  selectedSubsection,
+  onSelectSubsection,
+  onOpenAllKanji,
   dueCount,
   dailyReviewsCompleted,
   dailyLessonGoal,
@@ -46,9 +49,6 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
   onStartPastDueReview,
   onOpenCustomReview,
 }) => {
-  const [selectedSubsection, setSelectedSubsection] = useState<JLPTSubsectionInfo | null>(null);
-  const [showAllKanjiGrid, setShowAllKanjiGrid] = useState(false);
-
   const subsections = JLPT_SUBSECTIONS[level] || [];
   const levelInfo = JLPT_LEVELS.find((l) => l.id === level);
   const badgeColor = levelInfo?.badgeColor || '#5DA9E9';
@@ -126,17 +126,6 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
     return { monthName, cells };
   }, [goalCompletedDates, targetLessons, learnedLessonIds, isReviewGoalDone]);
 
-  if (showAllKanjiGrid) {
-    return (
-      <KanjiGridOverlay
-        groups={allLevelGroups}
-        allGroups={allLevelGroups}
-        onClose={() => setShowAllKanjiGrid(false)}
-        onOpenSettings={onOpenSettings}
-      />
-    );
-  }
-
   // Sub-section Selector View
   if (subsections.length > 0 && !selectedSubsection) {
     return (
@@ -154,7 +143,7 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
           <div className="flex items-center gap-4">
             <button
               type="button"
-              onClick={() => setShowAllKanjiGrid(true)}
+              onClick={onOpenAllKanji}
               title="View all Kanji (N5 - N1)"
               aria-label="View all Kanji"
               className="text-slate-200 hover:text-white p-1"
@@ -177,7 +166,7 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
             <button
               key={sub.id}
               type="button"
-              onClick={() => setSelectedSubsection(sub)}
+              onClick={() => onSelectSubsection(sub)}
               className="flex flex-col items-center group focus:outline-none"
             >
               <div
@@ -204,7 +193,7 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
           type="button"
           onClick={() => {
             if (selectedSubsection) {
-              setSelectedSubsection(null);
+              onSelectSubsection(null);
             } else {
               onBack();
             }
@@ -218,7 +207,7 @@ export const LevelScreen: React.FC<LevelScreenProps> = ({
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={() => setShowAllKanjiGrid(true)}
+            onClick={onOpenAllKanji}
             title="View all Kanji (N5 - N1)"
             aria-label="View all Kanji"
             className="text-slate-200 hover:text-white p-1"

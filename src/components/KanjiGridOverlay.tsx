@@ -14,13 +14,6 @@ export interface LevelLessonsGroup {
   learnedLessonIds: string[];
 }
 
-interface KanjiGridOverlayProps {
-  groups: LevelLessonsGroup[];
-  allGroups?: LevelLessonsGroup[];
-  onClose: () => void;
-  onOpenSettings: () => void;
-}
-
 interface ExampleWordEntry {
   itemId: string;
   word: string;
@@ -29,7 +22,7 @@ interface ExampleWordEntry {
   lessonRef: string;
 }
 
-interface CoreKanjiEntry {
+export interface CoreKanjiEntry {
   char: string;
   kana: string;
   meaning: string;
@@ -38,6 +31,16 @@ interface CoreKanjiEntry {
   strokeData: CharacterStrokeData;
   examples: ExampleWordEntry[];
   isLearned: boolean;
+}
+
+interface KanjiGridOverlayProps {
+  groups: LevelLessonsGroup[];
+  allGroups?: LevelLessonsGroup[];
+  voice: 'male' | 'female';
+  inspectedKanji: CoreKanjiEntry | null;
+  onInspectKanji: (entry: CoreKanjiEntry | null) => void;
+  onClose: () => void;
+  onOpenSettings: () => void;
 }
 
 const LEVEL_NUM_MAP: Record<JLPTLevelId, number> = {
@@ -99,14 +102,16 @@ function toHiragana(str: string): string {
 export const KanjiGridOverlay: React.FC<KanjiGridOverlayProps> = ({
   groups,
   allGroups,
+  voice,
+  inspectedKanji,
+  onInspectKanji,
   onClose,
   onOpenSettings,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [inspectedKanji, setInspectedKanji] = useState<CoreKanjiEntry | null>(null);
 
   const playWordAudio = (itemId: string, textFallback: string) => {
-    const audio = new Audio(`/audio/${itemId}-female.mp3`);
+    const audio = new Audio(`/audio/${itemId}-${voice}.mp3`);
     audio.play().catch(() => {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -313,7 +318,7 @@ export const KanjiGridOverlay: React.FC<KanjiGridOverlayProps> = ({
           <div className="flex items-center justify-between mb-4">
             <button
               type="button"
-              onClick={() => setInspectedKanji(null)}
+              onClick={() => onInspectKanji(null)}
               aria-label="Back to Kanji grid"
               className="text-slate-200 hover:text-white p-1"
             >
@@ -433,7 +438,7 @@ export const KanjiGridOverlay: React.FC<KanjiGridOverlayProps> = ({
                   <button
                     key={`${level}-${entry.char}`}
                     type="button"
-                    onClick={() => setInspectedKanji(entry)}
+                    onClick={() => onInspectKanji(entry)}
                     className={`text-2xl sm:text-3xl font-serif py-1 rounded transition hover:bg-white/10 ${
                       entry.isLearned ? 'text-[#2ECC71]' : 'text-slate-100'
                     }`}
