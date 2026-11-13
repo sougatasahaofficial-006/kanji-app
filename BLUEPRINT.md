@@ -70,6 +70,7 @@ kanji-app/
 ├── capacitor.config.ts             # Capacitor native app configuration
 ├── generate_audio.py               # Batch neural TTS audio & manifest generator
 └── package.json
+```
 
 ---
 ## 5. System Architecture & Workflows
