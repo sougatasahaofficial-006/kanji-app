@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Kanji Study</string>
+    <string name="title_activity_main">Kanji Study</string>
+    <string name="package_name">com.sougata.kanjiapp</string>
+    <string name="custom_url_scheme">com.sougata.kanjiapp</string>
+</resources>
