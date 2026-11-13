@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  background-color: #242933;
+  color: #ffffff;
+  font-family: "Noto Sans JP", system-ui, -apple-system, sans-serif;
+}
+
+.font-serif {
+  font-family: "Klee One", "Yu Mincho", serif;
+}
