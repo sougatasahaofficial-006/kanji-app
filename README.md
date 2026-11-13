@@ -1,94 +1,52 @@
-# Kanji Study App (JLPT N5–N1) 漢
+# Kanji Master (JLPT N5–N1) 漢
 
-A complete, offline-capable Japanese Kanji and vocabulary learning application covering **JLPT N5 through N1** (**1,275 lessons** and **2,128 unique root Kanji**). Built from the ground up with React, TypeScript, Vite, Tailwind CSS, and Python-generated native Japanese neural audio.
+**Master all 2,128 core Japanese Kanji—100% offline, ad-free, and built for serious JLPT learners.**
 
----
-
-## 📖 Project Documentary: From Scratch to Completion
-
-### Phase 1: Architecture & Core Learning Engine
-The project began with designing a clean, distraction-free study experience modeled around structured JLPT progression:
-- **Scaffolded the React + TypeScript + Vite architecture** with Tailwind CSS styling, state persistence in `localStorage`, and modular screens (`HomeScreen`, `LevelScreen`, `SessionRunner`, `CustomReviewScreen`, and `SettingsScreen`).
-- **Built the Spaced Repetition System (SRS)** in `useAppStore.ts`, tracking ease factors, repetition streaks, and dynamic review intervals (`Review frequency` scaling from `0.5x` to `2.0x` and `Maximum reviews per day` batch limits).
-- **Implemented multi-mode testing** in `SessionRunner.tsx`, supporting interactive Kanji handwriting canvases (with toggleable writing guide lines), multiple-choice drills for Kana and English meanings, and customizable questions per word (`1–7`).
-
-### Phase 2: Compiling the Complete JLPT N5–N1 Curriculum
-To make the app genuinely comprehensive for every JLPT tier, the entire curriculum dataset was digitized, structured, and verified lesson by lesson:
-- **JLPT N5 (`src/data/n5.ts`):** 54 lessons covering 111 foundational root Kanji (`一` to `円`).
-- **JLPT N4 (`src/data/n4.ts`):** 95 lessons covering 146 elementary root Kanji (`明` to `遠`).
-- **JLPT N3 (`src/data/n3.ts`):** 345 lessons covering 379 intermediate root Kanji (`笑` to `乾`).
-- **JLPT N2 (`src/data/n2.ts`):** 222 lessons covering 377 pre-advanced root Kanji (`軍` to `撮`).
-- **JLPT N1 (`src/data/n1.ts`):** Compiled all 559 advanced lessons covering 1,115 root Kanji (`視` to `遜`).
-- **Canonical Directory Deduplication (`KanjiGridOverlay.tsx`):** Engineered the three-line Kanji directory to extract and deduplicate root Kanji in canonical order (N5 → N1), resulting in **2,128 unique root Kanji** (99.6% of the official 2,136 Jōyō Kanji standard).
-
-### Phase 3: Offline Neural Audio Pipeline
-Rather than relying on inconsistent browser speech synthesis, a dedicated Python audio generation pipeline (`generate_audio.py`) was built using `edge-tts`:
-- Synthesizes two native Japanese voices for every single vocabulary item across N5–N1: **Male (`ja-JP-KeitaNeural`)** and **Female (`ja-JP-NanamiNeural`)**.
-- Generates pronunciation directly from each word's exact `kana` reading to prevent Kanji homograph mispronunciations, backed by a `manifest.json` integrity tracker inside `public/audio/`.
-
-### Phase 4: Daily Goals, Calendar Streaks & Push Notifications
-To support consistent daily study habits on both desktop and mobile devices:
-- **Daily Goals Card (`LevelScreen.tsx`):** Added a two-column dashboard card pairing an interactive daily checklist (`Review` + `1–10` daily target lessons) with a live monthly `S M T W T F S` progress calendar grid that highlights completed study days.
-- **Service Worker Notifications (`public/sw.js` & `src/utils/notifications.ts`):** Built a Service Worker notification system with dynamically generated Canvas Kanji icons, vibration patterns, and action buttons (`Start Practice` / `Later`) to alert learners when daily reviews or target lessons are due.
-- **Full System Audit:** Verified all 1,275 lessons, 2,128 root Kanji, offline audio assets, SRS calculations, and Service Worker notification permissions.
+**Kanji Master** is a fast, distraction-free Japanese Kanji and vocabulary study app covering the complete **JLPT N5 through N1 curriculum** (**1,275 structured lessons**). Whether you are learning your very first stroke in N5 or polishing advanced N1 vocabulary on a commute with zero internet, everything runs instantaneously on your device.
 
 ---
 
-## 📊 Curriculum Breakdown
+## ✨ Why Kanji Master?
 
-| JLPT Level | App Level | Lessons | Unique Root Kanji | First → Last Kanji |
+* **Complete JLPT N5–N1 Roadmap:** Progress step-by-step through **1,275 curated lessons** covering **2,128 unique root Kanji** (99.6% of the official Jōyō Kanji list), complete with On'yomi/Kun'yomi readings and English meanings.
+* **Smart Spaced Repetition (SRS):** Never forget what you learn. An adaptive SM-2 review engine schedules past-due vocabulary right before it fades from memory—with customizable review frequency (`0.5x`–`2.0x`) and daily review caps.
+* **Interactive Stroke-Writing & Quiz Drills:** Practice writing Kanji directly on screen with toggleable crosshair guide lines, or switch to fast multiple-choice drills across Kanji, Kana readings, and English meanings.
+* **Studio-Quality Offline Neural Audio:** Every vocabulary item includes bundled male and female native Japanese pronunciations generated from exact Kana readings—zero loading spinners, zero internet required.
+* **Daily Goals & Streak Calendar:** Stay consistent with customizable daily lesson targets (`1–10` lessons/day), a live monthly progress calendar, and gentle daily study reminders.
+* **Canonical Root-Kanji Directory:** Browse and inspect all 2,128 unique root Kanji organized cleanly by JLPT tier in canonical learning order.
+* **Cross-Device JSON Backup & Restore:** Transfer your entire study history, streaks, and SRS schedules between your Android phone, tablet, and PC browser in seconds using portable `.json` backup files—no account or cloud login needed.
+
+---
+
+## 📊 Curriculum Coverage
+
+| JLPT Level | App Tier | Lessons | Unique Root Kanji | Progression Range |
 | :--- | :--- | :---: | :---: | :---: |
 | **JLPT N5** | Level 1 | 54 | 111 | `一` → `円` |
 | **JLPT N4** | Level 2 | 95 | 146 | `明` → `遠` |
 | **JLPT N3** | Level 3 | 345 | 379 | `笑` → `乾` |
 | **JLPT N2** | Level 4 | 222 | 377 | `軍` → `撮` |
 | **JLPT N1** | Level 5 | 559 | 1,115 | `視` → `遜` |
-| **Total** | **All Levels** | **1,275** | **2,128** | **Full Jōyō Coverage** |
+| **Total** | **Complete** | **1,275** | **2,128** | **N5–N1 Full Coverage** |
 
 ---
 
-## 🚀 Getting Started (Local Development)
+## 📲 Installation & Getting Started
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [Python 3.10+](https://www.python.org/) (only required if regenerating audio files)
+### Android (APK)
+1. Download the latest `Kanji-Master-v1.1.0.apk` from the **[Releases](../../releases)** page.
+2. Open the downloaded file on your Android phone or tablet and allow installation from your browser/file manager if prompted.
+3. Launch **Kanji Master** and start Level 1 (N5) immediately—no sign-up or internet connection required.
 
-### 1. Install Dependencies & Run
+### Cross-Device Backup & Restore
+1. Open **Settings** (gear icon on the Home screen) and scroll to **Backup & Restore**.
+2. Tap **Export Backup** to save `kanji-master-backup-YYYY-MM-DD.json` to Google Drive, Downloads, or share it directly to another device.
+3. On your new device, open **Settings → Backup & Restore**, tap **Import Backup**, and select your `.json` file to restore all learned Kanji, streaks, and preferences.
+
+### Run Locally (Web / Developer Setup)
 ```bash
+# 1. Install dependencies
 npm install
+
+# 2. Start the local development server
 npm run dev
-Open http://localhost:5173 in your browser.
-
-2. Regenerate Offline Audio (Optional)
-If you add or edit lessons in src/data/*.ts, run the audio generator to update any new or modified .mp3 clips:
-
-Bash
-pip install edge-tts
-python generate_audio.py
-📁 Project Structure
-Plaintext
-kanji-app/
-├── public/
-│   ├── audio/              # Offline male & female MP3 pronunciations + manifest.json
-│   └── sw.js               # Service Worker for Android/Desktop study notifications
-├── src/
-│   ├── components/
-│   │   ├── KanjiGridOverlay.tsx   # Deduplicated N5–N1 root Kanji directory
-│   │   └── SessionRunner.tsx      # Interactive lesson & SRS review engine
-│   ├── data/
-│   │   ├── n5.ts ... n1.ts        # Complete 1,275-lesson JLPT curriculum
-│   ├── screens/
-│   │   ├── HomeScreen.tsx         # Level 1–5 selector
-│   │   ├── LevelScreen.tsx        # Daily Goals card, calendar & lesson roadmap
-│   │   ├── CustomReviewScreen.tsx # Targeted review builder
-│   │   └── SettingsScreen.tsx     # Audio, typography, SRS & Daily Goals settings
-│   ├── store/
-│   │   └── useAppStore.ts         # localStorage persistence, SRS & Daily Goals logic
-│   ├── types/
-│   │   └── kanji.ts               # Core TypeScript interfaces & JLPT metadata
-│   └── utils/
-│       ├── notifications.ts       # Service Worker notification dispatcher
-│       └── speech.ts              # Offline MP3 audio player with fallback
-├── BLUEPRINT.md            # Technical architecture & feature blueprint
-├── generate_audio.py       # Batch neural TTS audio generator
-└── package.json
