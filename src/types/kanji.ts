@@ -160,3 +160,9 @@ export interface AppSettings {
   dailyStudyReminders: boolean;
   appLanguage: string;
 }
+export interface KanjiBackupFile {
+  app: 'KanjiMaster';
+  schemaVersion: 1;
+  exportedAt: string;
+  data: Record<string, unknown>;
+}

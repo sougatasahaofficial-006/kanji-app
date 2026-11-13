@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { X, Download, Upload } from 'lucide-react';
 import type { AppSettings } from '../types/kanji';
 import {
   requestAndTriggerStudyNotification,
   scheduleDailyStudyReminder,
   cancelDailyStudyReminder,
 } from '../utils/notifications';
+import { exportAppBackup, importAppBackup } from '../utils/backup';
 
 interface SettingsScreenProps {
   settings: AppSettings;
@@ -18,6 +19,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onUpdate,
   onClose,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   useEffect(() => {
     if (settings.kanaAnswerFormat !== 'choices' || settings.englishAnswerFormat !== 'choices') {
       onUpdate({
@@ -28,22 +31,37 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   }, [settings.kanaAnswerFormat, settings.englishAnswerFormat, onUpdate]);
 
   const handleToggleReminders = async () => {
-  const nextValue = !settings.dailyStudyReminders;
-  if (nextValue) {
-    const granted = await requestAndTriggerStudyNotification({
-      title: 'Daily Kanji Practice Due 漢',
-      body: 'Daily study reminders are active! We will remind you every day at 9:00 AM.',
-      tag: 'kanji-reminder-enabled',
-    });
-    if (granted) {
-      await scheduleDailyStudyReminder(9, 0);
+    const nextValue = !settings.dailyStudyReminders;
+    if (nextValue) {
+      const granted = await requestAndTriggerStudyNotification({
+        title: 'Daily Kanji Practice Due 漢',
+        body: 'Daily study reminders are active! We will remind you every day at 9:00 AM.',
+        tag: 'kanji-reminder-enabled',
+      });
+      if (granted) {
+        await scheduleDailyStudyReminder(9, 0);
+      }
+      onUpdate({ dailyStudyReminders: granted });
+    } else {
+      await cancelDailyStudyReminder();
+      onUpdate({ dailyStudyReminders: false });
     }
-    onUpdate({ dailyStudyReminders: granted });
-  } else {
-    await cancelDailyStudyReminder();
-    onUpdate({ dailyStudyReminders: false });
-  }
-};
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const result = await importAppBackup(file);
+    e.target.value = '';
+
+    if (result.ok) {
+      alert('Progress restored! The app will now reload.');
+      window.location.reload();
+    } else {
+      alert(result.error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F1F5F9] text-slate-800 pb-12 px-4 pt-4 select-none">
@@ -332,6 +350,47 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               </div>
             </>
           )}
+        </div>
+
+        {/* BACKUP & RESTORE */}
+        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 px-1">
+          Backup & Restore
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm p-4 space-y-3 mb-6">
+          <div>
+            <div className="text-sm font-medium">Progress Backup</div>
+            <div className="text-xs text-slate-400">
+              Export or restore your study progress across devices
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5 pt-1">
+            <button
+              type="button"
+              onClick={() => exportAppBackup()}
+              className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#242933] text-white text-xs font-semibold hover:opacity-90 active:scale-[0.99] transition"
+            >
+              <Download className="w-4 h-4" />
+              Export Backup
+            </button>
+
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold hover:bg-slate-200 active:scale-[0.99] transition"
+            >
+              <Upload className="w-4 h-4" />
+              Import Backup
+            </button>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            onChange={handleImportFile}
+            className="hidden"
+          />
         </div>
 
         {/* OTHER */}
