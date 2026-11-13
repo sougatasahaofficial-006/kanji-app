@@ -71,6 +71,7 @@ kanji-app/
 ├── generate_audio.py               # Batch neural TTS audio & manifest generator
 └── package.json
 
+---
 ## 5. System Architecture & Workflows
 
 ### A. Static Build-Time Data & Audio Pipeline
