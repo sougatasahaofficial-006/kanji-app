@@ -1,7 +1,11 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { AppSettings } from '../types/kanji';
-import { requestAndTriggerStudyNotification } from '../utils/notifications';
+import {
+  requestAndTriggerStudyNotification,
+  scheduleDailyStudyReminder,
+  cancelDailyStudyReminder,
+} from '../utils/notifications';
 
 interface SettingsScreenProps {
   settings: AppSettings;
@@ -24,18 +28,22 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   }, [settings.kanaAnswerFormat, settings.englishAnswerFormat, onUpdate]);
 
   const handleToggleReminders = async () => {
-    const nextValue = !settings.dailyStudyReminders;
-    if (nextValue) {
-      const granted = await requestAndTriggerStudyNotification({
-        title: 'Daily Kanji Practice Due 漢',
-        body: 'Daily study reminders are active! Your daily Kanji reviews & lessons are ready.',
-        tag: 'kanji-reminder-enabled',
-      });
-      onUpdate({ dailyStudyReminders: granted });
-    } else {
-      onUpdate({ dailyStudyReminders: false });
+  const nextValue = !settings.dailyStudyReminders;
+  if (nextValue) {
+    const granted = await requestAndTriggerStudyNotification({
+      title: 'Daily Kanji Practice Due 漢',
+      body: 'Daily study reminders are active! We will remind you every day at 9:00 AM.',
+      tag: 'kanji-reminder-enabled',
+    });
+    if (granted) {
+      await scheduleDailyStudyReminder(9, 0);
     }
-  };
+    onUpdate({ dailyStudyReminders: granted });
+  } else {
+    await cancelDailyStudyReminder();
+    onUpdate({ dailyStudyReminders: false });
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#F1F5F9] text-slate-800 pb-12 px-4 pt-4 select-none">
@@ -322,21 +330,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   />
                 </button>
               </div>
-              {settings.dailyStudyReminders && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    requestAndTriggerStudyNotification({
-                      title: 'Daily Kanji Practice Due 漢',
-                      body: 'You have Kanji reviews and daily lessons waiting. Tap to practice!',
-                      tag: 'kanji-daily-practice',
-                    })
-                  }
-                  className="w-full py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition"
-                >
-                  Send Test Notification
-                </button>
-              )}
             </>
           )}
         </div>

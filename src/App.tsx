@@ -11,6 +11,8 @@ import { CustomReviewScreen } from './screens/CustomReviewScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { SessionRunner } from './components/SessionRunner';
 import { useState, useMemo, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import {
   ensureNotificationServiceWorker,
   checkAndNotifyDailyPracticeDue,
@@ -39,6 +41,39 @@ export function App() {
 
   const [view, setView] = useState<ActiveView>({ name: 'home' });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  useEffect(() => {
+  if (!Capacitor.isNativePlatform()) return;
+
+  let listenerHandle: { remove: () => Promise<void> } | null = null;
+
+  CapacitorApp.addListener('backButton', () => {
+    if (settingsOpen) {
+      setSettingsOpen(false);
+      return;
+    }
+    if (
+      view.name === 'lesson-session' ||
+      view.name === 'review-session' ||
+      view.name === 'custom-review'
+    ) {
+      setView({ name: 'level', level: view.level });
+      return;
+    }
+    if (view.name === 'level') {
+      setView({ name: 'home' });
+      return;
+    }
+    CapacitorApp.exitApp();
+  }).then((handle) => {
+    listenerHandle = handle;
+  });
+
+  return () => {
+    if (listenerHandle) {
+      listenerHandle.remove();
+    }
+  };
+}, [settingsOpen, view]);
 
   function getLessonsForLevel(level: JLPTLevelId): KanjiLesson[] {
     switch (level) {

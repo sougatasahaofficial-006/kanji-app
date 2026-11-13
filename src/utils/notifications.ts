@@ -1,4 +1,9 @@
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
+
 const LAST_NOTIFIED_KEY = 'kanji_app_last_reminder_date';
+const DAILY_REMINDER_ID = 1001;
+const INSTANT_NOTIFICATION_BASE_ID = 2000;
 
 function createKanjiNotificationIcon(size = 192, monochrome = false): string {
   const canvas = document.createElement('canvas');
@@ -8,11 +13,9 @@ function createKanjiNotificationIcon(size = 192, monochrome = false): string {
   if (!ctx) return '';
 
   if (monochrome) {
-    // Transparent background + white Kanji for Android top status-bar small icon
     ctx.clearRect(0, 0, size, size);
     ctx.fillStyle = '#FFFFFF';
   } else {
-    // Rounded sky-blue badge with crisp white Kanji for Android notification shade
     const radius = size * 0.24;
     ctx.fillStyle = '#5DA9E9';
     ctx.beginPath();
@@ -41,11 +44,91 @@ export async function ensureNotificationServiceWorker(): Promise<ServiceWorkerRe
   }
 }
 
+async function ensureNativePermission(): Promise<boolean> {
+  try {
+    let status = await LocalNotifications.checkPermissions();
+    if (status.display !== 'granted') {
+      status = await LocalNotifications.requestPermissions();
+    }
+    return status.display === 'granted';
+  } catch (err) {
+    console.warn('Native notification permission failed:', err);
+    return false;
+  }
+}
+
+export async function scheduleDailyStudyReminder(hour = 9, minute = 0): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return true;
+
+  const granted = await ensureNativePermission();
+  if (!granted) return false;
+
+  try {
+    await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] });
+
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          id: DAILY_REMINDER_ID,
+          title: 'Daily Kanji Practice Due 漢',
+          body: 'Your daily Kanji lessons & SRS reviews are waiting. Keep your streak alive!',
+          schedule: {
+            on: { hour, minute },
+            repeats: true,
+            allowWhileIdle: true,
+          },
+          smallIcon: 'ic_stat_icon_config_sample',
+          iconColor: '#5DA9E9',
+        },
+      ],
+    });
+    return true;
+  } catch (err) {
+    console.warn('Failed to schedule daily native reminder:', err);
+    return false;
+  }
+}
+
+export async function cancelDailyStudyReminder(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    await LocalNotifications.cancel({ notifications: [{ id: DAILY_REMINDER_ID }] });
+  } catch (err) {
+    console.warn('Failed to cancel daily native reminder:', err);
+  }
+}
+
 export async function requestAndTriggerStudyNotification(options: {
   title: string;
   body: string;
   tag?: string;
 }): Promise<boolean> {
+  // 1. Native Android / iOS path via Capacitor LocalNotifications
+  if (Capacitor.isNativePlatform()) {
+    const granted = await ensureNativePermission();
+    if (!granted) return false;
+
+    try {
+      const id = INSTANT_NOTIFICATION_BASE_ID + (Math.floor(Date.now() / 1000) % 50000);
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            id,
+            title: options.title,
+            body: options.body,
+            schedule: { at: new Date(Date.now() + 800), allowWhileIdle: true },
+            iconColor: '#5DA9E9',
+          },
+        ],
+      });
+      return true;
+    } catch (err) {
+      console.warn('Native local notification failed:', err);
+      return false;
+    }
+  }
+
+  // 2. Web / Desktop PWA fallback
   if (!('Notification' in window)) return false;
 
   let permission = Notification.permission;
@@ -80,7 +163,6 @@ export async function requestAndTriggerStudyNotification(options: {
     return true;
   }
 
-  // Fallback for desktop browsers without Service Worker
   new Notification(options.title, {
     body: options.body,
     icon,
